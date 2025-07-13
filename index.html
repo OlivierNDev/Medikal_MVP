@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medikal - AI Healthcare System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .chat-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .voice-wave {
+            animation: wave 1.5s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        .mobile-nav {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: block;
+            }
+            .desktop-nav {
+                display: none;
+            }
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .nav-tab {
+                min-width: 120px;
+            }
+            .chat-bubble {
+                max-width: 85%;
+            }
+        }
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+        @media print {
+            body { print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 md:py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 md:space-x-4">
+                    <div class="bg-white p-2 rounded-full">
+                        <i class="fas fa-heartbeat text-purple-600 text-xl md:text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Medikal</h1>
+                        <p class="text-purple-200 text-sm md:text-base">AI Healthcare System</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <div class="hidden md:flex items-center space-x-2">
+                        <i class="fas fa-language"></i>
+                        <select id="languageSelect" class="bg-white text-gray-800 px-3 py-1 rounded text-sm">
+                            <option value="en">English</option>
+                            <option value="rw">Kinyarwanda</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bell relative">
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                        </i>
+                        <i class="fas fa-user-circle text-xl md:text-2xl"></i>
+                    </div>
+                    <!-- Mobile menu button -->
+                    <button id="mobileMenuBtn" class="md:hidden text-white">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Menu -->
+    <div id="mobileMenu" class="mobile-menu fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 md:hidden">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Menu</h2>
+                <button id="closeMobileMenu" class="text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <nav class="space-y-2">
+                <button class="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center" onclick="showSection('patient'); closeMobileNav();">
+                    <i class="fas fa-user-plus mr-3"></i>Patient Portal
+                </button>
+                <button class="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center" onclick="showSection('doctor'); closeMobileNav();">
+                    <i class="fas fa-user-md mr-3"></i>Doctor Dashboard
+                </button>
+                <button class="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center" onclick="showSection('admin'); closeMobileNav();">
+                    <i class="fas fa-cogs mr-3"></i>Admin Panel
+                </button>
+                <button class="w-full text-left py-3 px-4 rounded-lg hover:bg-gray-100 flex items-center" onclick="showSection('ai'); closeMobileNav();">
+                    <i class="fas fa-robot mr-3"></i>AI Assistant
+                </button>
+                <div class="pt-4 border-t">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-language"></i>
+                        <select class="bg-gray-100 text-gray-800 px-3 py-1 rounded text-sm flex-1">
+                            <option value="en">English</option>
+                            <option value="rw">Kinyarwanda</option>
+                        </select>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-md desktop-nav">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 nav-tabs">
+                <button class="nav-tab active py-3 md:py-4 px-4 md:px-6 border-b-2 border-purple-600 text-purple-600 font-medium text-sm md:text-base whitespace-nowrap" onclick="showSection('patient')">
+                    <i class="fas fa-user-plus mr-2"></i>Patient Portal
+                </button>
+                <button class="nav-tab py-3 md:py-4 px-4 md:px-6 border-b-2 border-transparent text-gray-600 hover:text-purple-600 font-medium text-sm md:text-base whitespace-nowrap" onclick="showSection('doctor')">
+                    <i class="fas fa-user-md mr-2"></i>Doctor Dashboard
+                </button>
+                <button class="nav-tab py-3 md:py-4 px-4 md:px-6 border-b-2 border-transparent text-gray-600 hover:text-purple-600 font-medium text-sm md:text-base whitespace-nowrap" onclick="showSection('admin')">
+                    <i class="fas fa-cogs mr-2"></i>Admin Panel
+                </button>
+                <button class="nav-tab py-3 md:py-4 px-4 md:px-6 border-b-2 border-transparent text-gray-600 hover:text-purple-600 font-medium text-sm md:text-base whitespace-nowrap" onclick="showSection('ai')">
+                    <i class="fas fa-robot mr-2"></i>AI Assistant
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Patient Portal Section -->
+    <section id="patient-section" class="section-content">
+        <div class="container mx-auto px-4 py-6 md:py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Patient Registration -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6 mb-6 md:mb-8">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
+                            <i class="fas fa-user-plus text-purple-600 mr-2"></i>Patient Registration
+                        </h2>
+                        <form class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                <input type="text" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter full name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                <input type="tel" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="+250 XXX XXX XXX">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">National ID</label>
+                                <input type="text" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="1 XXXX X XXXXXXX X XX">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mutual Assistance No.</label>
+                                <input type="text" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter assistance number">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                                <input type="date" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                                <select class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
+                                <input type="text" class="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Emergency contact name and phone">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="w-full bg-purple-600 text-white py-3 md:py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200">
+                                    <i class="fas fa-save mr-2"></i>Register Patient
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Skin Disease Analysis -->
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
+                            <i class="fas fa-camera text-purple-600 mr-2"></i>Skin Disease Analysis
+                        </h2>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center">
+                            <i class="fas fa-cloud-upload-alt text-3xl md:text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-4 text-sm md:text-base">Upload image of skin condition for AI analysis</p>
+                            <input type="file" id="skinImage" accept="image/*" class="hidden">
+                            <button onclick="document.getElementById('skinImage').click()" class="bg-purple-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-image mr-2"></i>Select Image
+                            </button>
+                        </div>
+                        <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-800 mb-2">AI Analysis Results:</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Eczema</span>
+                                    <span class="text-sm font-medium text-green-600">85% confidence</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Dermatitis</span>
+                                    <span class="text-sm font-medium text-yellow-600">12% confidence</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Normal skin</span>
+                                    <span class="text-sm font-medium text-red-600">3% confidence</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Quick Actions -->
+                <div class="space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-tachometer-alt text-purple-600 mr-2"></i>Quick Actions
+                        </h3>
+                        <div class="space-y-3">
+                            <button class="w-full bg-blue-50 text-blue-700 py-3 md:py-3 px-4 rounded-md hover:bg-blue-100 transition duration-200 flex items-center text-sm md:text-base">
+                                <i class="fas fa-calendar-plus mr-3"></i>Book Appointment
+                            </button>
+                            <button class="w-full bg-green-50 text-green-700 py-3 md:py-3 px-4 rounded-md hover:bg-green-100 transition duration-200 flex items-center text-sm md:text-base">
+                                <i class="fas fa-prescription-bottle mr-3"></i>View Prescriptions
+                            </button>
+                            <button class="w-full bg-yellow-50 text-yellow-700 py-3 md:py-3 px-4 rounded-md hover:bg-yellow-100 transition duration-200 flex items-center text-sm md:text-base">
+                                <i class="fas fa-bell mr-3"></i>Medication Reminders
+                            </button>
+                            <button class="w-full bg-purple-50 text-purple-700 py-3 md:py-3 px-4 rounded-md hover:bg-purple-100 transition duration-200 flex items-center text-sm md:text-base">
+                                <i class="fas fa-file-medical mr-3"></i>Medical History
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Voice Interface -->
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-microphone text-purple-600 mr-2"></i>Voice Interface
+                        </h3>
+                        <div class="text-center">
+                            <button id="voiceBtn" class="bg-red-500 text-white rounded-full p-4 hover:bg-red-600 transition duration-200 mb-4">
+                                <i class="fas fa-microphone text-xl md:text-2xl"></i>
+                            </button>
+                            <p class="text-sm text-gray-600 mb-4">Tap to speak in English or Kinyarwanda</p>
+                            <div class="flex justify-center space-x-1">
+                                <div class="voice-wave bg-purple-500 w-1 h-8 rounded"></div>
+                                <div class="voice-wave bg-purple-500 w-1 h-12 rounded" style="animation-delay: 0.1s"></div>
+                                <div class="voice-wave bg-purple-500 w-1 h-10 rounded" style="animation-delay: 0.2s"></div>
+                                <div class="voice-wave bg-purple-500 w-1 h-14 rounded" style="animation-delay: 0.3s"></div>
+                                <div class="voice-wave bg-purple-500 w-1 h-8 rounded" style="animation-delay: 0.4s"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Notifications -->
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-bell text-purple-600 mr-2"></i>Recent Notifications
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                                <i class="fas fa-pills text-blue-600 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-blue-800">Medication Reminder</p>
+                                    <p class="text-xs text-blue-600">Take Amoxicillin 500mg at 2:00 PM</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                                <i class="fas fa-calendar text-green-600 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-green-800">Appointment</p>
+                                    <p class="text-xs text-green-600">Follow-up visit tomorrow at 10:00 AM</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-yellow-800">Lab Results</p>
+                                    <p class="text-xs text-yellow-600">Blood test results are ready</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctor Dashboard Section -->
+    <section id="doctor-section" class="section-content hidden">
+        <div class="container mx-auto px-4 py-6 md:py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8">
+                <!-- Patient Search & Queue -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6 mb-6 md:mb-8">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
+                            <i class="fas fa-search text-purple-600 mr-2"></i>Patient Search & Queue
+                        </h2>
+                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-6">
+                            <div class="flex-1">
+                                <input type="text" placeholder="Search by name, phone, or ID..." class="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <button class="bg-purple-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Today's Queue -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-800 mb-4">Today's Queue (12 patients)</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between bg-white p-3 rounded border-l-4 border-green-500">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">JP</div>
+                                        <div>
+                                            <p class="font-medium text-sm md:text-base">Jean Paul Uwimana</p>
+                                            <p class="text-xs md:text-sm text-gray-600">ID: 1234567890123456</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs md:text-sm text-gray-600">09:30 AM</p>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Current</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between bg-white p-3 rounded border-l-4 border-yellow-500">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">MU</div>
+                                        <div>
+                                            <p class="font-medium text-sm md:text-base">Marie Uwimana</p>
+                                            <p class="text-xs md:text-sm text-gray-600">ID: 1234567890123457</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs md:text-sm text-gray-600">10:00 AM</p>
+                                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Next</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between bg-white p-3 rounded border-l-4 border-gray-300">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">AN</div>
+                                        <div>
+                                            <p class="font-medium text-sm md:text-base">Alexis Niyongabo</p>
+                                            <p class="text-xs md:text-sm text-gray-600">ID: 1234567890123458</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs md:text-sm text-gray-600">10:30 AM</p>
+                                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Waiting</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Details & Consultation -->
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
+                            <i class="fas fa-user-circle text-purple-600 mr-2"></i>Patient Consultation
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 mb-3">Patient Information</h3>
+                                <div class="space-y-2 text-sm">
+                                    <p><span class="font-medium">Name:</span> Jean Paul Uwimana</p>
+                                    <p><span class="font-medium">Age:</span> 34 years</p>
+                                    <p><span class="font-medium">Gender:</span> Male</p>
+                                    <p><span class="font-medium">Phone:</span> +250 788 123 456</p>
+                                    <p><span class="font-medium">ID:</span> 1234567890123456</p>
+                                </div>
+                                <div class="mt-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Medical History</h4>
+                                    <div class="space-y-1 text-sm">
+                                        <button class="text-blue-600 hover:underline flex items-center">
+                                            <i class="fas fa-file-pdf mr-2"></i>Visit 1 - Dec 15, 2023
+                                        </button>
+                                        <button class="text-blue-600 hover:underline flex items-center">
+                                            <i class="fas fa-file-pdf mr-2"></i>Visit 2 - Nov 20, 2023
+                                        </button>
+                                        <button class="text-blue-600 hover:underline flex items-center">
+                                            <i class="fas fa-file-pdf mr-2"></i>Visit 3 - Oct 10, 2023
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800 mb-3">Current Symptoms</h3>
+                                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 h-20 md:h-24" placeholder="Enter patient symptoms and complaints..."></textarea>
+                                
+                                <h3 class="font-semibold text-gray-800 mt-4 mb-3">Diagnosis</h3>
+                                <input type="text" placeholder="ICD-10 Code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2">
+                                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 h-16 md:h-20" placeholder="Diagnosis details..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Prescription -->
+                        <div class="mt-6 border-t pt-6">
+                            <h3 class="font-semibold text-gray-800 mb-3">Prescription</h3>
+                            <div class="space-y-3">
+                                <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                                    <input type="text" placeholder="Medication name" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <input type="text" placeholder="Dosage" class="w-full md:w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <input type="text" placeholder="Duration" class="w-full md:w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <button class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-medium text-sm md:text-base">Amoxicillin 500mg - 3 times daily - 7 days</span>
+                                        <button class="text-red-600 hover:text-red-800">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-6 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                            <button class="bg-purple-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-save mr-2"></i>Save Consultation
+                            </button>
+                            <button class="bg-blue-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                                <i class="fas fa-print mr-2"></i>Print Prescription
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Sidebar -->
+                <div class="space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-robot text-purple-600 mr-2"></i>AI Assistant
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="bg-purple-50 rounded-lg p-3">
+                                <h4 class="font-semibold text-purple-800 mb-2">Diagnostic Suggestions</h4>
+                                <ul class="text-sm space-y-1">
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-green-600 mr-2"></i>
+                                        Upper respiratory infection (85%)
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-yellow-600 mr-2"></i>
+                                        Allergic rhinitis (15%)
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-3">
+                                <h4 class="font-semibold text-blue-800 mb-2">Medication Recommendations</h4>
+                                <ul class="text-sm space-y-1">
+                                    <li>• Amoxicillin 500mg TID x 7 days</li>
+                                    <li>• Paracetamol 500mg PRN for fever</li>
+                                    <li>• Plenty of fluids and rest</li>
+                                </ul>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-3">
+                                <h4 class="font-semibold text-red-800 mb-2">AMR Alert</h4>
+                                <p class="text-sm text-red-700">Patient has received 3 antibiotic courses in the past 3 months. Consider culture test.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Recording -->
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-microphone text-purple-600 mr-2"></i>Voice Notes
+                        </h3>
+                        <div class="text-center">
+                            <button class="bg-red-500 text-white rounded-full p-3 hover:bg-red-600 transition duration-200 mb-3">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <p class="text-sm text-gray-600">Record consultation notes</p>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                                <span class="text-sm">Recording 1 (2:34)</span>
+                                <button class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="admin-section" class="section-content hidden">
+        <div class="container mx-auto px-4 py-6 md:py-8">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Today's Patients</p>
+                            <p class="text-2xl md:text-3xl font-bold text-blue-600">247</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-users text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-600 text-sm">↑ 12% from yesterday</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Prescriptions</p>
+                            <p class="text-2xl md:text-3xl font-bold text-green-600">1,832</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-prescription text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-600 text-sm">↑ 8% from yesterday</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">AMR Alerts</p>
+                            <p class="text-2xl md:text-3xl font-bold text-red-600">23</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-red-600 text-sm">↑ 15% from yesterday</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Active Doctors</p>
+                            <p class="text-2xl md:text-3xl font-bold text-purple-600">42</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-user-md text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-600 text-sm">↑ 2% from yesterday</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <!-- Patient Traffic Chart -->
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-line text-purple-600 mr-2"></i>Patient Traffic (Last 7 Days)
+                    </h3>
+                    <div style="height: 300px;">
+                        <canvas id="patientTrafficChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Medication Trends -->
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-pills text-purple-600 mr-2"></i>Top Prescribed Medications
+                    </h3>
+                    <div style="height: 300px;">
+                        <canvas id="medicationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AMR Analytics -->
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-shield-alt text-purple-600 mr-2"></i>AMR Risk Analysis
+                    </h3>
+                    <div style="height: 300px;">
+                        <canvas id="amrChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-server text-purple-600 mr-2"></i>System Health
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">API Uptime</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-green-600 h-2 rounded-full" style="width: 99.9%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-green-600">99.9%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Database Performance</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 95%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-blue-600">95%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">AI Model Response</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 88%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-purple-600">88%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Storage Usage</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-yellow-600 h-2 rounded-full" style="width: 67%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-yellow-600">67%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="bg-white rounded-lg card-shadow p-4 md:p-6 mt-6 md:mt-8">
+                <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-users-cog text-purple-600 mr-2"></i>User Management
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Name</th>
+                                <th class="px-4 py-2 text-left">Role</th>
+                                <th class="px-4 py-2 text-left">Status</th>
+                                <th class="px-4 py-2 text-left">Last Login</th>
+                                <th class="px-4 py-2 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="px-4 py-2">Dr. Sarah Johnson</td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Doctor</span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                                </td>
+                                <td class="px-4 py-2">2 hours ago</td>
+                                <td class="px-4 py-2">
+                                    <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="px-4 py-2">Alice Mukamana</td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">Admin</span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span>
+                                </td>
+                                <td class="px-4 py-2">30 minutes ago</td>
+                                <td class="px-4 py-2">
+                                    <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="px-4 py-2">Jean Claude Niyongabo</td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Patient</span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Inactive</span>
+                                </td>
+                                <td class="px-4 py-2">3 days ago</td>
+                                <td class="px-4 py-2">
+                                    <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Assistant Section -->
+    <section id="ai-section" class="section-content hidden">
+        <div class="container mx-auto px-4 py-6 md:py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <!-- Chat Interface -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg card-shadow h-96 md:h-96">
+                        <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg p-4">
+                            <h2 class="text-lg md:text-xl font-bold">
+                                <i class="fas fa-robot mr-2"></i>MedikalBot - AI Assistant
+                            </h2>
+                            <p class="text-sm opacity-90">Ask me anything about diagnosis, medications, or patient care</p>
+                        </div>
+                        <div class="p-4 h-60 md:h-72 overflow-y-auto" id="chatMessages">
+                            <div class="space-y-4">
+                                <!-- Bot message -->
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-robot text-white text-sm"></i>
+                                    </div>
+                                    <div class="chat-bubble bg-gray-100 p-3 rounded-lg">
+                                        <p class="text-sm">Hello! I'm MedikalBot, your AI assistant. I can help you with medical diagnoses, drug interactions, treatment recommendations, and more. What would you like to know?</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- User message -->
+                                <div class="flex items-start space-x-3 flex-row-reverse">
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-white text-sm"></i>
+                                    </div>
+                                    <div class="chat-bubble bg-blue-600 text-white p-3 rounded-lg">
+                                        <p class="text-sm">Patient has fever, cough, and body aches for 3 days. What could be the diagnosis?</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bot response -->
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-robot text-white text-sm"></i>
+                                    </div>
+                                    <div class="chat-bubble bg-gray-100 p-3 rounded-lg">
+                                        <p class="text-sm">Based on the symptoms (fever, cough, body aches), the most likely diagnoses are:</p>
+                                        <ul class="text-sm mt-2 space-y-1">
+                                            <li><strong>• Viral upper respiratory infection (85%)</strong></li>
+                                            <li>• Bacterial pneumonia (10%)</li>
+                                            <li>• Influenza (5%)</li>
+                                        </ul>
+                                        <p class="text-sm mt-2">I recommend checking vital signs, conducting a physical examination, and consider a chest X-ray if symptoms persist or worsen.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-t p-4">
+                            <div class="flex space-x-2 md:space-x-4">
+                                <input type="text" id="chatInput" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <button class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                <button class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Features -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
+                        <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-brain text-purple-600 mr-2"></i>Diagnosis Assistant
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4">Get AI-powered diagnostic suggestions based on symptoms and patient history.</p>
+                            <button class="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                Start Diagnosis
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-pills text-blue-600 mr-2"></i>Drug Interaction Checker
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4">Check for potential drug interactions and contraindications.</p>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                                Check Interactions
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-image text-green-600 mr-2"></i>Medical Image Analysis
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4">Analyze medical images for potential abnormalities and conditions.</p>
+                            <button class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200">
+                                Analyze Image
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                                <i class="fas fa-shield-alt text-red-600 mr-2"></i>AMR Risk Assessment
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-4">Assess antimicrobial resistance risk for antibiotic prescriptions.</p>
+                            <button class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition duration-200">
+                                Assess Risk
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Tools Sidebar -->
+                <div class="space-y-4 md:space-y-6">
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-language text-purple-600 mr-2"></i>Language Tools
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Input Language</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option>English</option>
+                                    <option>Kinyarwanda</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Output Language</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option>English</option>
+                                    <option>Kinyarwanda</option>
+                                </select>
+                            </div>
+                            <button class="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-sync-alt mr-2"></i>Auto-Translate
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-history text-purple-600 mr-2"></i>Recent Queries
+                        </h3>
+                        <div class="space-y-2">
+                            <div class="p-2 bg-gray-50 rounded text-sm">
+                                <p class="text-gray-800">Diabetes management guidelines</p>
+                                <p class="text-gray-500 text-xs">2 hours ago</p>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-sm">
+                                <p class="text-gray-800">Antibiotic resistance patterns</p>
+                                <p class="text-gray-500 text-xs">4 hours ago</p>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-sm">
+                                <p class="text-gray-800">Hypertension treatment protocols</p>
+                                <p class="text-gray-500 text-xs">1 day ago</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg card-shadow p-4 md:p-6">
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-cog text-purple-600 mr-2"></i>AI Settings
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Confidence Threshold</span>
+                                <input type="range" class="w-16" min="0" max="100" value="75">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Auto-suggestions</span>
+                                <input type="checkbox" class="form-checkbox" checked>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Voice responses</span>
+                                <input type="checkbox" class="form-checkbox">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 md:py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Medikal</h4>
+                    <p class="text-gray-400 text-sm">AI-powered healthcare system for Africa, built by ZeroX Intelligence.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Features</h4>
+                    <ul class="text-gray-400 text-sm space-y-2">
+                        <li>Patient Management</li>
+                        <li>AI Diagnosis</li>
+                        <li>Voice Interface</li>
+                        <li>AMR Monitoring</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Support</h4>
+                    <ul class="text-gray-400 text-sm space-y-2">
+                        <li>Documentation</li>
+                        <li>Training</li>
+                        <li>API Reference</li>
+                        <li>System Status</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Contact</h4>
+                    <ul class="text-gray-400 text-sm space-y-2">
+                        <li>Email: info@medikal.rw</li>
+                        <li>Phone: +250 788 123 456</li>
+                        <li>Address: Kigali, Rwanda</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 md:mt-8 pt-6 md:pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2024 Medikal by ZeroX Intelligence. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.add('active');
+            mobileMenuOverlay.classList.remove('hidden');
+        });
+
+        closeMobileMenu.addEventListener('click', function() {
+            closeMobileNav();
+        });
+
+        mobileMenuOverlay.addEventListener('click', function() {
+            closeMobileNav();
+        });
+
+        function closeMobileNav() {
+            mobileMenu.classList.remove('active');
+            mobileMenuOverlay.classList.add('hidden');
+        }
+
+        // Tab navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section-content');
+            sections.forEach(section => section.classList.add('hidden'));
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update tab styles
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active', 'border-purple-600', 'text-purple-600');
+                tab.classList.add('border-transparent', 'text-gray-600');
+            });
+            
+            // Activate clicked tab
+            event.target.classList.add('active', 'border-purple-600', 'text-purple-600');
+            event.target.classList.remove('border-transparent', 'text-gray-600');
+        }
+
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Patient Traffic Chart
+            const patientCtx = document.getElementById('patientTrafficChart').getContext('2d');
+            new Chart(patientCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Patients',
+                        data: [245, 289, 312, 278, 334, 298, 247],
+                        borderColor: 'rgb(147, 51, 234)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Medication Chart
+            const medicationCtx = document.getElementById('medicationChart').getContext('2d');
+            new Chart(medicationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Amoxicillin', 'Paracetamol', 'Ibuprofen', 'Omeprazole', 'Others'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            'rgb(147, 51, 234)',
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(239, 68, 68)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // AMR Chart
+            const amrCtx = document.getElementById('amrChart').getContext('2d');
+            new Chart(amrCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Amoxicillin', 'Ciprofloxacin', 'Azithromycin', 'Cephalexin', 'Doxycycline'],
+                    datasets: [{
+                        label: 'Risk Score',
+                        data: [85, 72, 45, 38, 29],
+                        backgroundColor: function(context) {
+                            const value = context.raw;
+                            if (value > 70) return 'rgb(239, 68, 68)';
+                            if (value > 50) return 'rgb(245, 158, 11)';
+                            return 'rgb(16, 185, 129)';
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        });
+
+        // Voice button functionality
+        document.getElementById('voiceBtn').addEventListener('click', function() {
+            const button = this;
+            const icon = button.querySelector('i');
+            
+            if (button.classList.contains('bg-red-500')) {
+                // Start recording
+                button.classList.remove('bg-red-500');
+                button.classList.add('bg-green-500');
+                icon.classList.remove('fa-microphone');
+                icon.classList.add('fa-stop');
+                
+                // Simulate recording
+                setTimeout(() => {
+                    button.classList.remove('bg-green-500');
+                    button.classList.add('bg-red-500');
+                    icon.classList.remove('fa-stop');
+                    icon.classList.add('fa-microphone');
+                }, 3000);
+            }
+        });
+
+        // Chat functionality
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const message = this.value.trim();
+                if (message) {
+                    addMessage(message, 'user');
+                    this.value = '';
+                    
+                    // Simulate AI response
+                    setTimeout(() => {
+                        addMessage('I understand your question. Let me analyze the symptoms and provide recommendations...', 'bot');
+                    }, 1000);
+                }
+            }
+        });
+
+        function addMessage(message, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            
+            if (sender === 'user') {
+                messageDiv.className = 'flex items-start space-x-3 flex-row-reverse';
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-sm"></i>
+                    </div>
+                    <div class="chat-bubble bg-blue-600 text-white p-3 rounded-lg">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.className = 'flex items-start space-x-3';
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="chat-bubble bg-gray-100 p-3 rounded-lg">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Language selector
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            const selectedLang = this.value;
+            // Implement language change logic here
+            console.log('Language changed to:', selectedLang);
+        });
+    </script>
+</body>
+</html>
