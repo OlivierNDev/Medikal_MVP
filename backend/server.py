@@ -257,5 +257,12 @@ async def search_patients(query: str, current_user: dict = Depends(get_current_u
     
     return patients
 
+# Include routers
+from routes.consultation import router as consultation_router
+from routes.ai import router as ai_router
+
+app.include_router(consultation_router)
+app.include_router(ai_router)
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
