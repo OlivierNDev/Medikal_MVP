@@ -3,7 +3,6 @@ from typing import List
 from datetime import datetime
 from bson import ObjectId
 from models.consultation import ConsultationCreate, ConsultationResponse, ConsultationUpdate, MedicationItem
-from models.user import UserInDB
 from server import db, get_current_user
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
