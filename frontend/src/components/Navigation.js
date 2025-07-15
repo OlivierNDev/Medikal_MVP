@@ -1,39 +1,50 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 
 function Navigation() {
-  const { state, dispatch } = useApp();
-  const { activeSection } = state;
+  const { user } = useAuth();
 
-  const navItems = [
-    { id: 'patient', icon: 'fas fa-user-plus', text: 'Patient Portal' },
-    { id: 'doctor', icon: 'fas fa-user-md', text: 'Doctor Dashboard' },
-    { id: 'admin', icon: 'fas fa-cogs', text: 'Admin Panel' },
-    { id: 'ai', icon: 'fas fa-robot', text: 'AI Assistant' }
-  ];
+  const getRoleTitle = (role) => {
+    switch (role) {
+      case 'patient':
+        return 'Patient Portal';
+      case 'doctor':
+        return 'Doctor Dashboard';
+      case 'admin':
+        return 'Admin Panel';
+      case 'ai':
+        return 'AI Assistant';
+      default:
+        return 'Dashboard';
+    }
+  };
 
-  const handleNavClick = (sectionId) => {
-    dispatch({ type: 'SET_ACTIVE_SECTION', payload: sectionId });
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case 'patient':
+        return 'fas fa-user-plus';
+      case 'doctor':
+        return 'fas fa-user-md';
+      case 'admin':
+        return 'fas fa-cogs';
+      case 'ai':
+        return 'fas fa-robot';
+      default:
+        return 'fas fa-dashboard';
+    }
   };
 
   return (
-    <nav className="bg-white shadow-md hidden md:block">
+    <nav className="bg-white shadow-md">
       <div className="container mx-auto px-4">
-        <div className="flex space-x-4 md:space-x-8 overflow-x-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`nav-tab py-3 md:py-4 px-4 md:px-6 border-b-2 font-medium text-sm md:text-base whitespace-nowrap transition-colors duration-200 ${
-                activeSection === item.id
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-gray-600 hover:text-purple-600'
-              }`}
-            >
-              <i className={`${item.icon} mr-2`}></i>
-              {item.text}
-            </button>
-          ))}
+        <div className="flex items-center py-4">
+          <div className="flex items-center space-x-3">
+            <i className={`${getRoleIcon(user?.role)} text-purple-600 text-xl`}></i>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">{getRoleTitle(user?.role)}</h2>
+              <p className="text-sm text-gray-600">Welcome, {user?.username}</p>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
