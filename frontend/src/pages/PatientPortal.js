@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { patientAPI, aiAPI } from '../services/api';
 import VoiceInterface from '../components/VoiceInterface';
 import NotificationsList from '../components/NotificationsList';
 
@@ -15,11 +16,9 @@ function PatientPortal() {
     emergencyContact: ''
   });
   const [skinImage, setSkinImage] = useState(null);
-  const [analysisResults, setAnalysisResults] = useState([
-    { disease: 'Eczema', confidence: 85, color: 'text-green-600' },
-    { disease: 'Dermatitis', confidence: 12, color: 'text-yellow-600' },
-    { disease: 'Normal skin', confidence: 3, color: 'text-red-600' }
-  ]);
+  const [analysisResults, setAnalysisResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,18 +28,58 @@ function PatientPortal() {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setSkinImage(file);
-      // Here you would typically send the image to your AI analysis service
+      setLoading(true);
+      try {
+        const result = await aiAPI.analyzeSkinImage(file);
+        setAnalysisResults(result.predictions);
+        setMessage('Image analyzed successfully!');
+      } catch (error) {
+        setMessage('Error analyzing image. Please try again.');
+        console.error('Error analyzing image:', error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    setLoading(true);
+    setMessage('');
+    
+    try {
+      const patientData = {
+        full_name: formData.fullName,
+        phone: formData.phone,
+        national_id: formData.nationalId,
+        mutual_assistance_no: formData.mutualAssistanceNo,
+        date_of_birth: formData.dateOfBirth,
+        gender: formData.gender,
+        emergency_contact: formData.emergencyContact,
+        user_id: 'current_user_id' // This should come from auth context
+      };
+      
+      const result = await patientAPI.create(patientData);
+      setMessage('Patient registered successfully!');
+      setFormData({
+        fullName: '',
+        phone: '',
+        nationalId: '',
+        mutualAssistanceNo: '',
+        dateOfBirth: '',
+        gender: 'Male',
+        emergencyContact: ''
+      });
+    } catch (error) {
+      setMessage('Error registering patient. Please try again.');
+      console.error('Error registering patient:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const quickActions = [
@@ -59,6 +98,15 @@ function PatientPortal() {
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
               <i className="fas fa-user-plus text-purple-600 mr-2"></i>Patient Registration
             </h2>
+            
+            {message && (
+              <div className={`mb-4 p-3 rounded-md ${
+                message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {message}
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -67,6 +115,7 @@ function PatientPortal() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter full name"
                 />
@@ -78,6 +127,7 @@ function PatientPortal() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="+250 XXX XXX XXX"
                 />
@@ -89,6 +139,7 @@ function PatientPortal() {
                   name="nationalId"
                   value={formData.nationalId}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="1 XXXX X XXXXXXX X XX"
                 />
@@ -111,6 +162,7 @@ function PatientPortal() {
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -134,6 +186,7 @@ function PatientPortal() {
                   name="emergencyContact"
                   value={formData.emergencyContact}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Emergency contact name and phone"
                 />
@@ -141,9 +194,11 @@ function PatientPortal() {
               <div className="md:col-span-2">
                 <button
                   type="submit"
-                  className="w-full bg-purple-600 text-white py-3 md:py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200"
+                  disabled={loading}
+                  className="w-full bg-purple-600 text-white py-3 md:py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200 disabled:opacity-50"
                 >
-                  <i className="fas fa-save mr-2"></i>Register Patient
+                  <i className="fas fa-save mr-2"></i>
+                  {loading ? 'Registering...' : 'Register Patient'}
                 </button>
               </div>
             </form>
@@ -166,19 +221,26 @@ function PatientPortal() {
               />
               <button
                 onClick={() => document.getElementById('skinImage').click()}
-                className="bg-purple-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-purple-700 transition duration-200"
+                disabled={loading}
+                className="bg-purple-600 text-white px-6 py-3 md:py-2 rounded-md hover:bg-purple-700 transition duration-200 disabled:opacity-50"
               >
-                <i className="fas fa-image mr-2"></i>Select Image
+                <i className="fas fa-image mr-2"></i>
+                {loading ? 'Analyzing...' : 'Select Image'}
               </button>
             </div>
-            {skinImage && (
+            {analysisResults && (
               <div className="mt-6 bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-800 mb-2">AI Analysis Results:</h3>
                 <div className="space-y-2">
                   {analysisResults.map((result, index) => (
                     <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{result.disease}</span>
-                      <span className={`text-sm font-medium ${result.color}`}>{result.confidence}% confidence</span>
+                      <span className="text-sm text-gray-600">{result.condition}</span>
+                      <span className={`text-sm font-medium ${
+                        result.probability >= 0.7 ? 'text-green-600' : 
+                        result.probability >= 0.3 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {Math.round(result.probability * 100)}% confidence
+                      </span>
                     </div>
                   ))}
                 </div>
